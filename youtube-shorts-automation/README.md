@@ -1,5 +1,38 @@
 # Youtube Shorts Automation
 
+## Before you start
+Make sure you have `ffmpeg` installed and available in your path.
+You can download from `https://www.ffmpeg.org/download.html`.
+
+Run `ffmpeg` command on your system and it should run just fine.
+
+## Installation
+1. Create a new file `.env` in `youtube-shorts-automation` directory
+2. Copy the content of `.env.example` -> `.env`
+3. Update all API keys mentioned in `.env.example`
+
+Run `npm install` in `youtube-shorts-automation` directory to install dependencies.
+
+## How to Run
+Inside `youtube-shorts-automation` directory, run 
+```bash
+node index.js --help
+
+Usage: index [options]
+
+Options:
+  -t, --topic <topic>    Topic for video (default: "science facts")
+  -n, --num <num>        Number of shorts to generate (default: "3")
+  -o, --output <output>  Output directory (default: "output")
+  -h, --help             display help for command
+```
+
+Example: 
+```bash
+
+node index.js -t "Funny knock knock jokes" -n 3
+
+```
 
 # Next Step
 
