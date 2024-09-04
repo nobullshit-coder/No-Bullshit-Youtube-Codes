@@ -27,7 +27,9 @@ async function generateVideo(output_dir, i, output, {
         "-b:a 192k",
         "-shortest",
         `-t ${duration}`,
-        `-af "adelay=${audio_delay * 1000}|${audio_delay * 1000}"`
+        `-af "adelay=${audio_delay * 1000}|${audio_delay * 1000}"`,
+        `-map 0:v`,
+        `-map 1:a`,
     ];
 
     // video filters
