@@ -2,7 +2,7 @@ const { ElevenLabsClient } = require("elevenlabs");
 const fs = require("node:fs");
 
 const elevenlabs = new ElevenLabsClient({
-    apiKey: process.env.ELEVENLABS_API_KEY // Defaults to process.env.ELEVENLABS_API_KEY
+    apiKey: process.env.ELEVENLABS_API_KEY
 })
 
 async function generateAudio(text, output){

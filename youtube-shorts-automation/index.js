@@ -2,7 +2,7 @@ require('dotenv').config();
 const { program } = require('commander');
 const { v4: uuidv4 } = require('uuid');
 const fse = require('fs-extra');
-const config = require('./config.js');
+// const config = require('./config.js');
 const {generateFactsForShorts, generateAudio} = require("./lib/open-ai");
 const path = require("node:path");
 const pexels = require("./lib/pexels");
@@ -11,7 +11,7 @@ const captions = require("./lib/caption");
 const {getMediaDuration, generateVideo} = require("./lib/ffmpeg-helpers");
 
 program
-    .option('-t, --topic <topic>', "Topic for our video", "science facts")
+    .option('-t, --topic <topic>', "Topic for video", "science facts")
     .option('-n, --num <num>', 'Number of shorts to generate', '3')
     .option('-o, --output <output>', 'Output directory', 'output');
 

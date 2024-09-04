@@ -6,7 +6,7 @@ async function getMediaDuration(file_path) {
             if (err) {
                 reject(err);
             }
-            resolve(parseFloat(stdout.trim()));
+            resolve(parseInt(stdout.trim(), 10));
         })
     })
 }

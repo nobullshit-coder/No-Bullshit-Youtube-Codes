@@ -3,14 +3,12 @@ const { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = re
 const fs = require("node:fs");
 const { v4: uuidv4 } = require("uuid");
 
-const aws_region = "us-east-1";
-
 const transcribe = new TranscribeClient({
-    region: aws_region,
+    region: process.env.AWS_REGION,
 });
 
 const s3 = new S3Client({
-    region: aws_region,
+    region: process.env.AWS_REGION,
 });
 
 async function transcribeAudio(audio_path, output) {
@@ -18,8 +16,8 @@ async function transcribeAudio(audio_path, output) {
     const job_name = `audio_${uid}`;
     const file_name = `${job_name}.mp3`;
 
-    const bucket_name = "tm-api-data";
-    await uploadToS3(audio_path, bucket_name, file_name);
+    const bucket_name = process.env.AWS_BUCKET_NAME;
+    await uploadToS3(audio_path, file_name);
     const s3_file_uri = `s3://${bucket_name}/${file_name}`;
 
     const params = {
@@ -27,7 +25,11 @@ async function transcribeAudio(audio_path, output) {
         LanguageCode: "en-US", // hi-IN
         MediaFormat: "mp3",
         Media: { MediaFileUri: s3_file_uri },
-        OutputBucketName: bucket_name
+        OutputBucketName: bucket_name,
+        Settings: {
+            ShowSpeakerLabels: true,
+            MaxSpeakerLabels: 5
+        }
     };
 
     try {
@@ -35,17 +37,17 @@ async function transcribeAudio(audio_path, output) {
         const data = await transcribe.send(command);
         console.log('transcription started ...');
 
-        const transcriptionURI = await waitForTranscription(job_name, bucket_name);
+        const transcriptionURI = await waitForTranscription(job_name);
         if (!transcriptionURI) {
             return null;
         }
 
-        const transcriptionJSON = await getTranscriptionResult(job_name, bucket_name);
+        const transcriptionJSON = await getTranscriptionResult(job_name);
         fs.writeFileSync(output, JSON.stringify(transcriptionJSON, null, 4));
 
         // delete the assets from s3 to free some space
-        await deleteFile(file_name, bucket_name); // delete the input audio
-        await deleteFile(`${job_name}.json`, bucket_name); // delete the output transcription
+        await deleteFile(file_name); // delete the input audio
+        await deleteFile(`${job_name}.json`); // delete the output transcription
 
         return transcriptionJSON;
     } catch (e) {
@@ -53,10 +55,10 @@ async function transcribeAudio(audio_path, output) {
     }
 }
 
-async function deleteFile(key, bucket_name) {
+async function deleteFile(key) {
     try {
         const params = {
-            Bucket: bucket_name,
+            Bucket: process.env.AWS_BUCKET_NAME,
             Key: key
         };
 
@@ -67,9 +69,9 @@ async function deleteFile(key, bucket_name) {
     }
 }
 
-async function getTranscriptionResult(job_name, bucket_name) {
+async function getTranscriptionResult(job_name) {
     const params = {
-        Bucket: bucket_name,
+        Bucket: process.env.AWS_BUCKET_NAME,
         Key: `${job_name}.json`
     };
 
@@ -89,7 +91,7 @@ async function streamToString(stream) {
     })
 }
 
-async function waitForTranscription(job_name, bucket_name) {
+async function waitForTranscription(job_name) {
     const getStatus = async () => {
         const { TranscriptionJob } = await transcribe.send(new GetTranscriptionJobCommand({
             TranscriptionJobName: job_name
@@ -101,7 +103,7 @@ async function waitForTranscription(job_name, bucket_name) {
     while (true) {
         const status = await getStatus();
         if (status === "COMPLETED") {
-            const transcriptionURI = `s3://${bucket_name}/${job_name}`;
+            const transcriptionURI = `s3://${process.env.AWS_BUCKET_NAME}/${job_name}`;
             console.log('transcription completed');
             return transcriptionURI;
         } else if (status === 'FAILED') {
@@ -117,13 +119,13 @@ async function waitForTranscription(job_name, bucket_name) {
     }
 }
 
-async function uploadToS3(file_path, bucket_name, file_name, key_prefix = "") {
+async function uploadToS3(file_path, file_name, key_prefix = "") {
     const key = `${key_prefix}${file_name}`;
 
     try {
         const file_stream = fs.createReadStream(file_path);
         const params = {
-            Bucket: bucket_name,
+            Bucket: process.env.AWS_BUCKET_NAME,
             Key: key,
             Body: file_stream,
         };
